@@ -163,6 +163,8 @@ def print_standard():
 
 
 def __call_validator(options):
+    import click
+
     paths_to_validate = get_paths_to_validate(options.paths,
                                               options.recursive)
 
@@ -174,77 +176,80 @@ def __call_validator(options):
 
     # main loop : will iterate over every file the program has to validate,
     #             validate them and then print the output
-    for yara_rule_path in list(paths_to_validate):
-        if options.veryverbose:
-            print('{message:40}{y_file}'.format(
-                message='Validating Rule file:',
-                y_file=yara_rule_path,
-            ))
-
-        # handle if we want to overwrite or create new files
-        if options.createfile:
-            generate_values = True
-            yara_file_output = get_yara_file_new_path(yara_rule_path)
-            what_will_be_done = 'create a new file with the {} preface.'.format(YARA_VALID_PREFIX)
-        elif options.inplace:
-            generate_values = True
-            yara_file_output = yara_rule_path
-            what_will_be_done = 'modify the file in place.'
-        else:
-            generate_values = False
-            what_will_be_done = 'make no changes'
-            yara_file_output = None
-
-        yara_file_processor = run_yara_validator(yara_rule_path, generate_values, options.module)
-
-
-        # Prints the output of the validator.
-        file_message = '{message:39}{y_file}'
-        if yara_file_processor.return_file_error_state():
-            # The rule is invalid
-            all_invalid_rule_returns.append((yara_rule_path, yara_file_processor))
-
-            puts(colored.red(file_message.format(
-                message='🍩 Invalid Rule File:',
-                y_file=yara_rule_path)))
-
-            if options.nochanges:
-                print('     - Would {message}'.format(message=what_will_be_done))
-
-            if options.verbose or options.veryverbose:
-                print_errors(yara_file_processor, options)
-                print_warnings(yara_file_processor, options)
-
-        elif yara_file_processor.return_file_warning_state() and not options.warnings:
-            # The rule is valid, has warnings and warning are turned on
-
-            all_warning_rule_returns.append((yara_rule_path, yara_file_processor))
-
-            puts(colored.yellow(file_message.format(
-                message='   Warnings in Rule File:',
-                y_file=yara_rule_path
-            )))
-
-            if options.verbose or options.veryverbose:
-                print_warnings(yara_file_processor, options)
-
-        elif not yara_file_processor.return_file_error_state():
-            # The rule is valid with no warnings or has warnings and warnings are turned off
-
-            if not options.fail:
-                print(file_message.format(
-                    message="   Valid Rule File:",
-                    y_file=yara_rule_path
+    with click.progressbar(list(paths_to_validate),
+                           label="CCCS-YARA yara_validator:",
+                           length=len(paths_to_validate), bar_template="%(label)s  [%(bar)s]  %(info)s\n") as bar:
+        for yara_rule_path in bar:
+            if options.veryverbose:
+                print('{message:40}{y_file}'.format(
+                    message='Validating Rule file:',
+                    y_file=yara_rule_path,
                 ))
-            if options.nochanges:
-                print('     - Would {message}'.format(message=what_will_be_done))
-            elif options.inplace or options.createfile:
-                yara_file_processor.strings_of_rules_to_original_file()
-                overwrite_file(yara_file_output, yara_file_processor.return_edited_file_string())
 
-        else:
-            print('Danger Will Robinson! Danger!'
-                  'Seriously though, how on earth did you get here???')
+            # handle if we want to overwrite or create new files
+            if options.createfile:
+                generate_values = True
+                yara_file_output = get_yara_file_new_path(yara_rule_path)
+                what_will_be_done = 'create a new file with the {} preface.'.format(YARA_VALID_PREFIX)
+            elif options.inplace:
+                generate_values = True
+                yara_file_output = yara_rule_path
+                what_will_be_done = 'modify the file in place.'
+            else:
+                generate_values = False
+                what_will_be_done = 'make no changes'
+                yara_file_output = None
+
+            yara_file_processor = run_yara_validator(yara_rule_path, generate_values, options.module)
+
+
+            # Prints the output of the validator.
+            file_message = '{message:39}{y_file}'
+            if yara_file_processor.return_file_error_state():
+                # The rule is invalid
+                all_invalid_rule_returns.append((yara_rule_path, yara_file_processor))
+
+                puts(colored.red(file_message.format(
+                    message='\n🍩 Invalid Rule File:',
+                    y_file=yara_rule_path)))
+
+                if options.nochanges:
+                    print('     - Would {message}'.format(message=what_will_be_done))
+
+                if options.verbose or options.veryverbose:
+                    print_errors(yara_file_processor, options)
+                    print_warnings(yara_file_processor, options)
+
+            elif yara_file_processor.return_file_warning_state() and not options.warnings:
+                # The rule is valid, has warnings and warning are turned on
+
+                all_warning_rule_returns.append((yara_rule_path, yara_file_processor))
+
+                puts(colored.yellow(file_message.format(
+                    message='\n   Warnings in Rule File:',
+                    y_file=yara_rule_path
+                )))
+
+                if options.verbose or options.veryverbose:
+                    print_warnings(yara_file_processor, options)
+
+            elif not yara_file_processor.return_file_error_state():
+                # The rule is valid with no warnings or has warnings and warnings are turned off
+
+                if not options.fail:
+                    print(file_message.format(
+                        message="   Valid Rule File:",
+                        y_file=yara_rule_path
+                    ))
+                if options.nochanges:
+                    print('     - Would {message}'.format(message=what_will_be_done))
+                elif options.inplace or options.createfile:
+                    yara_file_processor.strings_of_rules_to_original_file()
+                    overwrite_file(yara_file_output, yara_file_processor.return_edited_file_string())
+
+            else:
+                print('Danger Will Robinson! Danger!'
+                      'Seriously though, how on earth did you get here???')
 
     if options.veryverbose:
         for invalid_rule_path, invalid_rule_return in all_invalid_rule_returns:
