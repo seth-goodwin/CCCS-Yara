@@ -13,7 +13,9 @@ from pathlib import Path
 
 import sys
 
-sys.path.append(str(Path(__file__).resolve().parent))
+YARA_VALIDATOR_PATH = Path(__file__).resolve().parent
+if YARA_VALIDATOR_PATH not in sys.path:
+    sys.path.append(str(YARA_VALIDATOR_PATH))
 
 from stix2_patch.filter_casefold import FilterCasefold
 
