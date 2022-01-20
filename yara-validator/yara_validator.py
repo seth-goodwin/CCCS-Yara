@@ -18,6 +18,7 @@ VALIDATOR_CFG = SCRIPT_LOCATION / 'validator_cfg.yml'
 MITRE_STIX_DATA_PATH = SCRIPT_LOCATION.parent / 'cti/enterprise-attack'
 
 # Allow use of custom CCCS_YARA*.yml
+
 CONFIG_YAML_PATH = os.environ.get('CONFIG_YAML_PATH', SCRIPT_LOCATION.parent / 'CCCS_YARA.yml')
 CONFIG_VALUES_YAML_PATH = os.environ.get('CONFIG_VALUES_YAML_PATH', SCRIPT_LOCATION.parent / 'CCCS_YARA_values.yml')
 
@@ -377,7 +378,7 @@ class YaraValidator:
         self.validators = Validators()
         self.required_fields = {}
         self.metadata_keys_regex = r''
-        self.metadata_keys_filter = r'^malware_type$|^actor_type$'
+        self.metadata_keys_filter = r'^malware_type$|^actor_type$|^reference_samples$'
         self.import_yara_cfg()
 
         self.required_fields_index = [Positional(i) for i in range(len(self.required_fields))]
@@ -387,11 +388,11 @@ class YaraValidator:
         self.validators.update(self.required_fields, self.required_fields_index, self.required_fields_children,
                                self.category_types)
         self.warning_functions = [
-            self.warning_author_no_report_check,
-            self.warning_author_no_hash_check,
-            self.warning_actor_no_mitre_group,
-            self.warning_no_category_type,
-            self.warning_no_reference_specified,
+            #self.warning_author_no_report_check,
+            #self.warning_author_no_hash_check,
+            #self.warning_actor_no_mitre_group,
+            #self.warning_no_category_type,
+            #self.warning_no_reference_specified,
             self.warning_common_metadata_errors
         ]
 
@@ -655,9 +656,9 @@ class YaraValidator:
         if self.__mitre_group_alias() and self.required_fields[ACTOR].found:
             keys_to_return.append(self.required_fields[ACTOR].argument.get(CHILD_PLACE_HOLDER))
 
-        category_type = self.required_fields[CATEGORY].argument.get(CHILD_PLACE_HOLDER)
-        if self.required_fields[category_type].check_argument_list_var(MITRE_SOFTWAREID_GEN):
-            self.validators.mitre_software_generator(rule_to_validate, CATEGORY, MITRE_ATT)
+        #category_type = self.required_fields[CATEGORY].argument.get(CHILD_PLACE_HOLDER)
+        #if self.required_fields[category_type].check_argument_list_var(MITRE_SOFTWAREID_GEN):
+            #self.validators.mitre_software_generator(rule_to_validate, CATEGORY, MITRE_ATT)
 
         return keys_to_return
 
@@ -720,7 +721,12 @@ class YaraValidator:
         :param regex_metadata: name of the metadata in the file that contains multiple regex expressions
         :return: single line of regex expression
         """
-        regex_yaml_path = SCRIPT_LOCATION.parent / file_name
+
+        if file_name == 'CCCS_YARA_values.yml':
+            regex_yaml_path = os.environ.get('CONFIG_VALUES_YAML_PATH', SCRIPT_LOCATION.parent / file_name)
+        elif file_name == 'CCCS_YARA.yml':
+            regex_yaml_path = os.environ.get('CONFIG_YAML_PATH', SCRIPT_LOCATION.parent / file_name)
+
         with open(regex_yaml_path, 'r', encoding='utf8') as yaml_file:
             scheme = yaml.safe_load(yaml_file)
 

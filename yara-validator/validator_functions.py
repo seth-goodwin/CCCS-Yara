@@ -24,6 +24,7 @@ BASE62_REGEX = r'^[0-9a-zA-z]+$'
 UNIVERSAL_REGEX = r'^[^a-z]*$'
 MITRE_GROUP_NAME = 'name'
 CHILD_PLACE_HOLDER = 'child_place_holder'
+LAST_MODIFIED = 'last_modified'
 
 # potential values of MetadataAttributes.optional variable
 class MetadataOpt(Enum):
@@ -187,7 +188,12 @@ class Validators:
             rule_id = {FINGERPRINT: rule_hash}
             if Helper.valid_metadata_index(rule_to_generate_id, metadata_index):
                 if list(rule_to_generate_id[METADATA][metadata_index].keys())[0] == FINGERPRINT:
-                    rule_to_generate_id[METADATA][metadata_index] = rule_id
+                    if rule_to_generate_id[METADATA][metadata_index] != rule_id:
+                        rule_to_generate_id[METADATA][metadata_index] != rule_id
+                        for i in range(0, len(rule_to_generate_id[METADATA])):
+                            if list(rule_to_generate_id[METADATA][i].keys())[0] == LAST_MODIFIED:
+                                rule_to_generate_id[METADATA][i][LAST_MODIFIED] = Helper.current_valid_date()
+
                     self.required_fields[FINGERPRINT].attributevalid()
                 else:
                     rule_to_generate_id[METADATA].insert(metadata_index, rule_id)
@@ -291,7 +297,7 @@ class Validators:
 
         return self.required_fields[FIRST_IMPORTED].valid
 
-    def valid_last_modified(self, rule_to_date_check, metadata_index, metadata_key):
+    def valid_last_modified(self, rule_to_date_check, metadata_index, metadata_key, set=False):
         """
         This value can be generated: there is the option to verify if an existing date is correct, insert a generated
             date if none was found and if the potential default metadata index would be out of bounds appends a
@@ -308,7 +314,7 @@ class Validators:
         current_date = Helper.current_valid_date()
         if Helper.valid_metadata_index(rule_to_date_check, metadata_index):
             if list(rule_to_date_check[METADATA][metadata_index].keys())[0] == LAST_MODIFIED:
-                rule_to_date_check[METADATA][metadata_index][LAST_MODIFIED] = current_date
+                #rule_to_date_check[METADATA][metadata_index][LAST_MODIFIED] = current_date
                 if Helper.validate_date(list(rule_to_date_check[METADATA][metadata_index].values())[0]):
                     self.required_fields[LAST_MODIFIED].attributevalid()
                 else:
