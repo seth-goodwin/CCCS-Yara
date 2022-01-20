@@ -3,13 +3,17 @@ import hashlib
 import re
 import uuid
 from enum import Enum
-from pathlib import Path
 
 import baseconv  # for the UUID
 import packaging.version
 import stix2.exceptions
 from stix2 import FileSystemSource
 from stix2 import Filter
+from pathlib import Path
+
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parent))
 
 from stix2_patch.filter_casefold import FilterCasefold
 
