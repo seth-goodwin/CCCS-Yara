@@ -15,7 +15,7 @@ if YARA_VALIDATOR_PATH not in sys.path:
 
 from yara_validator import run_yara_validator
 
-STANDARD_YAML_PATH = Path(__file__).resolve().parent / Path('CCCS_YARA.yml')
+STANDARD_YAML_PATH = Path(__file__).resolve().parent.parent / 'etc' / Path('CCCS_YARA.yml')
 YARA_FILENAME_REGEX = r'(\.yara|\.yar|\.rules)$'
 YARA_VALID_PREFIX = r'valid_'
 YARA_VALID_PREFIX_REG = re.compile(r'^' + YARA_VALID_PREFIX)
@@ -54,6 +54,8 @@ parser_group.add_argument('-i', '--in-place', action='store_true', default=False
                           help='Modifies valid files in place, mutually exclusive with -c.')
 parser_group.add_argument('-c', '--create-files', action='store_true', default=False, dest='createfile',
                           help='Writes a new file for each valid file, mutually exclusive with -i.')
+
+
 
 
 def parse_args(custom_args=None):

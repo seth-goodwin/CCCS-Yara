@@ -612,8 +612,8 @@ class Validators:
 class Helper:
     SCRIPT_LOCATION = Path(__file__).resolve().parent
     MITRE_STIX_DATA_PATH = SCRIPT_LOCATION.parent / 'cti/enterprise-attack'
-    VALIDATOR_YAML_PATH = SCRIPT_LOCATION.parent / 'CCCS_YARA_values.yml'
-    CONFIGURATION_YAML_PATH = SCRIPT_LOCATION.parent / 'CCCS_YARA.yml'
+    VALIDATOR_YAML_PATH = SCRIPT_LOCATION.parent.parent / 'etc' / 'CCCS_YARA_values.yml'
+    CONFIGURATION_YAML_PATH = SCRIPT_LOCATION.parent.parent / 'etc' / 'CCCS_YARA.yml'
 
     fs = FileSystemSource(MITRE_STIX_DATA_PATH)
 
